@@ -5,6 +5,30 @@ print_red() {
     echo -e "\e[31m$1\e[0m"
 }
 
+# Function to print status messages with colored output
+print_status() {
+    local status=$1
+    local message=$2
+    case $status in
+        "start")
+            # Bold white brackets, yellow * symbol
+            echo -e "\e[1;37m[ \e[33m* \e[1;37m]\e[0m ${message}..."
+            ;;
+        "ok")
+            # Bold white brackets, green "OK"
+            echo -e "\e[1;37m[ \e[32mOK \e[1;37m]\e[0m ${message}"
+            ;;
+        "failed")
+            # Bold white brackets, red "FAILED"
+            echo -e "\e[1;37m[ \e[31mFAILED \e[1;37m]\e[0m ${message}"
+            ;;
+    esac
+    # Add delay
+    if [[ "$status" == "start" || "$status" == "ok" ]]; then
+        sleep 1
+    fi
+}
+
 # Check if we are running as root
 if [ "$(id -u)" -ne 0 ]; then
     print_red "Please run as root 'sudo bash bookworm-server.sh'"
@@ -38,17 +62,29 @@ if ! id -u "$USERNAME" > /dev/null 2>&1; then
     exit 1
 fi
 
+chown -R "$USERNAME:users" $logfile
+
 # Ask the user if they want to setup directories
 read -p "Do you want to setup directories in /opt? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Create directories in /opt
-    echo "Creating directories in /opt"
-    mkdir -p /opt/{softwares,sources}
+    print_status "start" "Creating directories in /opt"
+    if mkdir -p /opt/{softwares,sources}; then
+        print_status "ok" "Directories created in /opt"
+    else
+        print_status "failed" "Failed to create directories in /opt"
+        exit 1
+    fi
 
     # Change ownership of directories
-    echo "Changing ownership of /opt/softwares and /opt/sources to $USERNAME"
-    chown -R "$USERNAME:users" /opt/{softwares,sources}
+    print_status "start" "Changing ownership of /opt/softwares and /opt/sources to $USERNAME"
+    if chown -R "$USERNAME:users" /opt/{softwares,sources}; then
+        print_status "ok" "Ownership changed to $USERNAME"
+    else
+        print_status "failed" "Failed to change ownership"
+        exit 1
+    fi
 fi
 
 # ---------------------------------------------------------- #
@@ -56,89 +92,164 @@ fi
 # ---------------------------------------------------------- #
 
 # System updates
-echo "Updating system packages"
-apt -y update
-apt -y full-upgrade
+print_status "start" "Updating system packages"
+if apt -y update && apt -y full-upgrade; then
+    print_status "ok" "System updated and upgraded"
+else
+    print_status "failed" "Failed to update system"
+    exit 1
+fi
 
 # ---------------------------------------------------------- #
 # --------- Install Debian apt Available Software ---------- #
 # ---------------------------------------------------------- #
 
 # Check dbus status
-echo "Checking if dbus is enabled"
+print_status "start" "Checking if dbus is enabled"
 if ! systemctl is-active --quiet dbus; then
-    echo "Installing dbus"
-    apt install -y dbus
-    echo "Starting and enabling dbus"
-    systemctl enable --now dbus
+    print_status "start" "Installing dbus"
+    if apt install -y dbus; then
+        print_status "ok" "dbus installed"
+    else
+        print_status "failed" "Failed to install dbus"
+        exit 1
+    fi
+
+    print_status "start" "Starting and enabling dbus"
+    if systemctl enable --now dbus; then
+        print_status "ok" "dbus started and enabled"
+    else
+        print_status "failed" "Failed to start and enable dbus"
+        exit 1
+    fi
+else
+    print_status "ok" "dbus is already enabled"
 fi
 
-# Install software-properties-common (for apt-add-repository)
-echo "Installing software-properties-common"
-apt install -y software-properties-common
+# Install software-properties-common
+print_status "start" "Installing software-properties-common"
+if apt install -y software-properties-common; then
+    print_status "ok" "software-properties-common installed"
+else
+    print_status "failed" "Failed to install software-properties-common"
+    exit 1
+fi
 
-# Add contrib non-free (rar, etc)
-echo "Adding repository components contrib non-free non-free-firmware"
-yes | apt-add-repository --component contrib non-free non-free-firmware
+# Add contrib non-free
+print_status "start" "Adding repository components contrib non-free non-free-firmware"
+if yes | apt-add-repository --component contrib non-free non-free-firmware; then
+    print_status "ok" "Repository components added"
+else
+    print_status "failed" "Failed to add repository components"
+    exit 1
+fi
 
 # General CLI tools
-echo "Installing general CLI tools"
-apt install -y wget gpg curl speedtest-cli rar unrar zip unzip jq tree net-tools bc
-apt install -y htop btop duf tldr tmux exa bat ncdu lf neofetch bash-completion zsh
+print_status "start" "Installing general CLI tools"
+if apt install -y wget gpg curl speedtest-cli rar unrar zip unzip jq tree net-tools bc htop btop duf tldr tmux exa bat ncdu lf neofetch bash-completion zsh; then
+    print_status "ok" "General CLI tools installed"
+else
+    print_status "failed" "Failed to install general CLI tools"
+    exit 1
+fi
 
 # Essential coding and packaging tools
-echo "Installing essential coding and packaging tools"
-apt install -y gcc g++ build-essential make ninja-build llvm cmake git dialog
+print_status "start" "Installing essential coding and packaging tools"
+if apt install -y gcc g++ build-essential make ninja-build cmake git dialog; then
+    print_status "ok" "Essential coding and packaging tools installed"
+else
+    print_status "failed" "Failed to install essential coding and packaging tools"
+    exit 1
+fi
 
 # Scripting tools
-echo "Installing scripting tools and development files"
-apt install -y python3 perl libperl-dev libncurses-dev libssl-dev libcurl4-openssl-dev
+print_status "start" "Installing scripting tools and development files"
+if apt install -y python3 perl libperl-dev libncurses-dev libssl-dev libcurl4-openssl-dev; then
+    print_status "ok" "Scripting tools installed"
+else
+    print_status "failed" "Failed to install scripting tools"
+    exit 1
+fi
 
-# Code Editors, IDE's and GUI designers
-echo "Installing code editors"
-apt install -y nano vi vim neovim
+# Code Editors
+print_status "start" "Installing code editors"
+if apt install -y nano vim neovim; then
+    print_status "ok" "Code editors installed"
+else
+    print_status "failed" "Failed to install code editors"
+    exit 1
+fi
 
 # General software and tools
-echo "Installing general software and tools"
-apt install -y mediainfo locate
-
-# Quick Emulator & Virtual Machine Manager
-#echo "Installing kvm/qemu components"
-#apt install -y qemu-system libvirt-clients libvirt-daemon-system
+print_status "start" "Installing general software and tools"
+if apt install -y mediainfo; then
+    print_status "ok" "General software and tools installed"
+else
+    print_status "failed" "Failed to install general software and tools"
+    exit 1
+fi
 
 # ---------------------------------------------------------- #
 # --------------------- Setup Dotfiles --------------------- #
 # ---------------------------------------------------------- #
 
-echo "Setting up dotfiles"
+print_status "start" "Setting up dotfiles"
 
 # Clone dotfiles repository
-echo "Cloning dotfiles repository"
-if ! git clone https://github.com/slash071/dotfiles; then
-    print_red "Failed to clone dotfiles repository. Please check the URL and try again."
+if git clone https://github.com/slash071/dotfiles; then
+    print_status "ok" "Dotfiles repository cloned"
+else
+    print_status "failed" "Failed to clone dotfiles repository"
+    exit 1
+fi
+
+# Change dotfiles ownership
+if chown -R "$USERNAME:users" dotfiles; then
+    print_status "ok" "Ownership of dotfiles changed to $USERNAME"
+else
+    print_status "failed" "Failed to change ownership"
     exit 1
 fi
 
 # Copy .vimrc to home directory
-echo "Copying .vimrc to home directory"
-cp dotfiles/.vimrc ~/
+if mv dotfiles/.vimrc /home/$USERNAME/; then
+    print_status "ok" ".vimrc copied"
+else
+    print_status "failed" "Failed to copy .vimrc"
+    exit 1
+fi
 
 # Copy lf configuration files
-echo "Copying lf configuration files"
-mkdir -p ~/.config/lf
-cp dotfiles/config/lf/{colors,lfrc,scope} ~/.config/lf
+if mkdir -p /home/$USERNAME/.config/lf && mv dotfiles/config/lf/{colors,lfrc,scope} /home/$USERNAME/.config/lf; then
+    print_status "ok" "lf configuration files copied"
+else
+    print_status "failed" "Failed to copy lf configuration files"
+    exit 1
+fi
 
 # Copy zsh configuration files
-echo "Copying zsh configuration files"
-mkdir -p ~/.config/zsh
-cp -r dotfiles/config/zsh ~/.config
+if mkdir -p /home/$USERNAME/.config/zsh && mv dotfiles/config/zsh /home/$USERNAME/.config; then
+    print_status "ok" "zsh configuration files copied"
+else
+    print_status "failed" "Failed to copy zsh configuration files"
+    exit 1
+fi
 
-echo "Setting ZDOTDIR for zsh"
-echo "export ZDOTDIR=$HOME/.config/zsh" | sudo tee -a /etc/zsh/zshenv
+# Set ZDOTDIR for zsh
+if echo "export ZDOTDIR=/home/$USERNAME/.config/zsh" | sudo tee -a /etc/zsh/zshenv; then
+    print_status "ok" "ZDOTDIR set for zsh"
+else
+    print_status "failed" "Failed to set ZDOTDIR for zsh"
+    exit 1
+fi
 
 # Clean up dotfiles repository
-echo "Cleaning up dotfiles repository"
-rm -rf dotfiles
+if rm -rf dotfiles; then
+    print_status "ok" "Dotfiles repository cleaned up"
+else
+    print_status "failed" "Failed to clean up dotfiles repository"
+    exit 1
+fi
 
 # ---------------------------------------------------------- #
 # ------------------ Change Default Shell ------------------ #
@@ -148,11 +259,11 @@ rm -rf dotfiles
 read -p "Do you want to change the default shell to Zsh? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    # Change the default shell to Zsh
+    print_status "start" "Changing default shell to Zsh for user $USERNAME"
     if chsh -s $(which zsh) "$USERNAME"; then
-        echo "Default shell changed to Zsh for user $USERNAME"
+        print_status "ok" "Default shell changed to Zsh for user $USERNAME"
     else
-        print_red "Failed to change the default shell for user $USERNAME"
+        print_status "failed" "Failed to change the default shell for user $USERNAME"
         exit 1
     fi
 fi
@@ -165,26 +276,29 @@ fi
 read -p "Do you want to disable the Message of the Day (MOTD)? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
+    print_status "start" "Start disabling MOTD message"
     # Backup the original file
-    echo "Backing up PAM configuration files (sshd and login)"
     for file in sshd login; do
         if ! cp /etc/pam.d/$file /etc/pam.d/$file.bak; then
-            print_red "Failed to backup /etc/pam.d/$file. Aborting."
+            print_status "failed" "Failed to backup /etc/pam.d/$file"
             exit 1
         fi
     done
+    print_status "ok" "PAM configuration files backed up"
 
     # Comment out the lines in /etc/pam.d/sshd
-    echo "Disabling MOTD in SSH by commenting out pam_motd.so lines"
-    if ! sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/sshd; then
-        print_red "Failed to modify /etc/pam.d/sshd. Aborting."
+    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/sshd; then
+        print_status "ok" "MOTD disabled in SSH"
+    else
+        print_status "failed" "Failed to disable MOTD in SSH"
         exit 1
     fi
 
     # Comment out the lines in /etc/pam.d/login
-    echo "Disabling MOTD in login by commenting out pam_motd.so lines"
-    if ! sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/login; then
-        print_red "Failed to modify /etc/pam.d/login. Aborting."
+    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/login; then
+        print_status "ok" "MOTD disabled in login"
+    else
+        print_status "failed" "Failed to disable MOTD in login"
         exit 1
     fi
 fi
@@ -197,16 +311,30 @@ fi
 read -p "Do you want to enable SSH? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    # Install SSH if not already installed
-    echo "Installing SSH package"
-    apt install -y openssh-server
-
-    # Check if SSH service is running
-    if systemctl is-active --quiet ssh; then
-        echo "SSH is already running."
+    # Check if openssh-server is installed
+    if ! dpkg -s openssh-server > /dev/null 2>&1; then
+        print_status "start" "Installing openssh-server"
+        if apt install -y openssh-server; then
+            print_status "ok" "openssh-server installed"
+        else
+            print_status "failed" "Failed to install openssh-server"
+            exit 1
+        fi
     else
-        echo "Starting and enabling SSH service"
-        systemctl enable --now ssh
+        print_status "ok" "openssh-server is already installed"
+    fi
+
+    # Check if SSH service is enabled
+    if ! systemctl is-enabled ssh > /dev/null 2>&1; then
+        print_status "start" "Enabling and starting SSH service"
+        if systemctl enable --now ssh; then
+            print_status "ok" "SSH service enabled and started"
+        else
+            print_status "failed" "Failed to enable and start SSH service"
+            exit 1
+        fi
+    else
+        print_status "ok" "SSH service is already enabled"
     fi
 fi
 
