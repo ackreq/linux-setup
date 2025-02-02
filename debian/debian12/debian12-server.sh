@@ -29,6 +29,13 @@ print_status() {
     fi
 }
 
+# Custom prompt function
+custom_prompt() {
+    local prompt_message=$1
+    echo -ne "\e[33m>>> ${prompt_message} (y/n) \e[0m"
+    read -r
+}
+
 # Check if we are running as root
 if [ "$(id -u)" -ne 0 ]; then
     print_red "Please run as root 'sudo bash bookworm-server.sh'"
@@ -36,8 +43,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Confirm before proceeding
-read -p "This script will install packages and modify your system. Continue? (y/n) " -n 1 -r
-echo
+custom_prompt "This script will install packages and modify your system. Continue?"
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
@@ -65,8 +71,7 @@ fi
 chown -R "$USERNAME:users" $logfile
 
 # Ask the user if they want to setup directories
-read -p "Do you want to setup directories in /opt? (y/n) " -n 1 -r
-echo
+custom_prompt "Do you want to setup directories in /opt?"
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Create directories in /opt
     print_status "start" "Creating directories in /opt"
@@ -240,7 +245,7 @@ else
 fi
 
 # Set ZDOTDIR for zsh
-if echo "export ZDOTDIR=/home/$USERNAME/.config/zsh" | sudo tee -a /etc/zsh/zshenv; then
+if echo "\nexport ZDOTDIR=/home/$USERNAME/.config/zsh" | sudo tee -a /etc/zsh/zshenv; then
     print_status "ok" "ZDOTDIR set for zsh"
 else
     print_status "failed" "Failed to set ZDOTDIR for zsh"
@@ -260,8 +265,7 @@ fi
 # ---------------------------------------------------------- #
 
 # Ask the user if they want to change the default shell to Zsh
-read -p "Do you want to change the default shell to Zsh? (y/n) " -n 1 -r
-echo
+custom_prompt "Do you want to change the default shell to Zsh?"
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     print_status "start" "Changing default shell to Zsh for user $USERNAME"
     if chsh -s $(which zsh) "$USERNAME"; then
@@ -277,8 +281,7 @@ fi
 # ---------------------------------------------------------- #
 
 # Ask the user if they want to enable SSH
-read -p "Do you want to enable SSH? (y/n) " -n 1 -r
-echo
+custom_prompt "Do you want to enable SSH?"
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Check if openssh-server is installed
     if ! dpkg -s openssh-server > /dev/null 2>&1; then
@@ -312,8 +315,7 @@ fi
 # ---------------------------------------------------------- #
 
 # Ask the user if they want to disable MOTD
-read -p "Do you want to disable the Message of the Day (MOTD)? (y/n) " -n 1 -r
-echo
+custom_prompt "Do you want to disable the Message of the Day (MOTD)?"
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     print_status "start" "Start disabling MOTD message"
     # Backup the original file
@@ -325,14 +327,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     done
     print_status "ok" "PAM configuration files backed up"
 
-    # Comment out the lines in /etc/pam.d/sshd
-    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/sshd; then
-        print_status "ok" "MOTD disabled in SSH"
-    else
-        print_status "failed" "Failed to disable MOTD in SSH"
-        exit 1
-    fi
-
     # Comment out the lines in /etc/pam.d/login
     if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/login; then
         print_status "ok" "MOTD disabled in login"
@@ -341,6 +335,14 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         exit 1
     fi
 fi
+
+    # Comment out the lines in /etc/pam.d/sshd
+    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/sshd; then
+        print_status "ok" "MOTD disabled in SSH"
+    else
+        print_status "failed" "Failed to disable MOTD in SSH"
+        exit 1
+    fi
 
 # ---------------------------------------------------------- #
 # -------------------------- Done -------------------------- #
