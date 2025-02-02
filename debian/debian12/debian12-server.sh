@@ -101,7 +101,7 @@ else
 fi
 
 # ---------------------------------------------------------- #
-# --------- Install Debian apt Available Software ---------- #
+# ------------------- Check dbus Status -------------------- #
 # ---------------------------------------------------------- #
 
 # Check dbus status
@@ -126,6 +126,10 @@ else
     print_status "ok" "dbus is already enabled"
 fi
 
+# ---------------------------------------------------------- #
+# --------- Install Debian apt Available Software ---------- #
+# ---------------------------------------------------------- #
+
 # Install software-properties-common
 print_status "start" "Installing software-properties-common"
 if apt install -y software-properties-common; then
@@ -146,7 +150,7 @@ fi
 
 # General CLI tools
 print_status "start" "Installing general CLI tools"
-if apt install -y wget gpg curl speedtest-cli rar unrar zip unzip jq tree net-tools bc htop btop duf tldr tmux exa bat ncdu lf neofetch bash-completion zsh; then
+if apt install -y wget gpg curl rar unrar zip unzip jq tree net-tools bc htop btop duf tldr tmux exa bat ncdu lf neofetch bash-completion zsh; then
     print_status "ok" "General CLI tools installed"
 else
     print_status "failed" "Failed to install general CLI tools"
@@ -164,7 +168,7 @@ fi
 
 # Scripting tools
 print_status "start" "Installing scripting tools and development files"
-if apt install -y python3 perl libperl-dev libncurses-dev libssl-dev libcurl4-openssl-dev; then
+if apt install -y python3 perl libperl-dev libncurses-dev; then
     print_status "ok" "Scripting tools installed"
 else
     print_status "failed" "Failed to install scripting tools"
@@ -182,7 +186,7 @@ fi
 
 # General software and tools
 print_status "start" "Installing general software and tools"
-if apt install -y mediainfo; then
+if apt install -y locate; then
     print_status "ok" "General software and tools installed"
 else
     print_status "failed" "Failed to install general software and tools"
@@ -269,41 +273,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # ---------------------------------------------------------- #
-# ------------------- PAM Configuration -------------------- #
-# ---------------------------------------------------------- #
-
-# Ask the user if they want to disable MOTD
-read -p "Do you want to disable the Message of the Day (MOTD)? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    print_status "start" "Start disabling MOTD message"
-    # Backup the original file
-    for file in sshd login; do
-        if ! cp /etc/pam.d/$file /etc/pam.d/$file.bak; then
-            print_status "failed" "Failed to backup /etc/pam.d/$file"
-            exit 1
-        fi
-    done
-    print_status "ok" "PAM configuration files backed up"
-
-    # Comment out the lines in /etc/pam.d/sshd
-    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/sshd; then
-        print_status "ok" "MOTD disabled in SSH"
-    else
-        print_status "failed" "Failed to disable MOTD in SSH"
-        exit 1
-    fi
-
-    # Comment out the lines in /etc/pam.d/login
-    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/login; then
-        print_status "ok" "MOTD disabled in login"
-    else
-        print_status "failed" "Failed to disable MOTD in login"
-        exit 1
-    fi
-fi
-
-# ---------------------------------------------------------- #
 # ---------------------- Enable SSH ------------------------ #
 # ---------------------------------------------------------- #
 
@@ -335,6 +304,41 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         fi
     else
         print_status "ok" "SSH service is already enabled"
+    fi
+fi
+
+# ---------------------------------------------------------- #
+# ------------------- PAM Configuration -------------------- #
+# ---------------------------------------------------------- #
+
+# Ask the user if they want to disable MOTD
+read -p "Do you want to disable the Message of the Day (MOTD)? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    print_status "start" "Start disabling MOTD message"
+    # Backup the original file
+    for file in sshd login; do
+        if ! cp /etc/pam.d/$file /etc/pam.d/$file.bak; then
+            print_status "failed" "Failed to backup /etc/pam.d/$file"
+            exit 1
+        fi
+    done
+    print_status "ok" "PAM configuration files backed up"
+
+    # Comment out the lines in /etc/pam.d/sshd
+    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/sshd; then
+        print_status "ok" "MOTD disabled in SSH"
+    else
+        print_status "failed" "Failed to disable MOTD in SSH"
+        exit 1
+    fi
+
+    # Comment out the lines in /etc/pam.d/login
+    if sed -i '/pam_motd.so/s/^/# /' /etc/pam.d/login; then
+        print_status "ok" "MOTD disabled in login"
+    else
+        print_status "failed" "Failed to disable MOTD in login"
+        exit 1
     fi
 fi
 
