@@ -12,7 +12,7 @@ print_status() {
     case $status in
         "start")
             # Bold white brackets, yellow * symbol
-            echo -e "\e[1;37m[ \e[33m* \e[1;37m]\e[0m ${message}..."
+            echo -e "\e[1;37m[ \e[33m** \e[1;37m]\e[0m ${message}..."
             ;;
         "ok")
             # Bold white brackets, green "OK"
