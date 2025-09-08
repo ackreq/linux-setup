@@ -236,7 +236,7 @@ else
 fi
 
 # Set ZDOTDIR for zsh
-if echo "\nexport ZDOTDIR=/home/$USERNAME/.config/zsh" | sudo tee -a /etc/zsh/zshenv; then
+if echo -e "\nexport ZDOTDIR=/home/$USERNAME/.config/zsh" | sudo tee -a /etc/zsh/zshenv; then
     print_status "ok" "ZDOTDIR set for zsh"
 else
     print_status "failed" "Failed to set ZDOTDIR for zsh"
