@@ -38,7 +38,7 @@ custom_prompt() {
 
 # Check if we are running as root
 if [ "$(id -u)" -ne 0 ]; then
-    print_red "Please run as root 'sudo bash bookworm-server.sh'"
+    print_red "Please run as root 'sudo bash debian12-server.sh'"
     exit 1
 fi
 
@@ -155,7 +155,7 @@ fi
 
 # General CLI tools
 print_status "start" "Installing general CLI tools"
-if apt install -y wget gpg curl rar unrar zip unzip jq tree net-tools bc htop btop duf tldr tmux exa bat ncdu lf neofetch bash-completion zsh; then
+if apt install -y wget gpg curl rar unrar zip unzip jq tree net-tools bc htop btop duf tldr tmux exa bat ncdu locate lf neofetch bash-completion zsh; then
     print_status "ok" "General CLI tools installed"
 else
     print_status "failed" "Failed to install general CLI tools"
@@ -189,15 +189,6 @@ else
     exit 1
 fi
 
-# General software and tools
-print_status "start" "Installing general software and tools"
-if apt install -y locate; then
-    print_status "ok" "General software and tools installed"
-else
-    print_status "failed" "Failed to install general software and tools"
-    exit 1
-fi
-
 # ---------------------------------------------------------- #
 # --------------------- Setup Dotfiles --------------------- #
 # ---------------------------------------------------------- #
@@ -205,7 +196,7 @@ fi
 print_status "start" "Setting up dotfiles"
 
 # Clone dotfiles repository
-if git clone https://github.com/slash071/dotfiles; then
+if git clone https://github.com/ackreq/dotfiles; then
     print_status "ok" "Dotfiles repository cloned"
 else
     print_status "failed" "Failed to clone dotfiles repository"
