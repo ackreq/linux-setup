@@ -23,8 +23,8 @@ These scripts automates the setup process for a Debian system, installing variou
 >    ```
 >
 >    Replace `<username>` with your actual username.
-
-3. Log out and log back in for the changes to take effect.
+>
+> 3. Log out and log back in for the changes to take effect.
 
 ## Usage
 

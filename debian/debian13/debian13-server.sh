@@ -135,27 +135,36 @@ fi
 # --------- Install Debian apt Available Software ---------- #
 # ---------------------------------------------------------- #
 
-# Install software-properties-common
-print_status "start" "Installing software-properties-common"
-if apt install -y software-properties-common; then
-    print_status "ok" "software-properties-common installed"
+# Backup sources.list
+print_status "start" "Backing up /etc/apt/sources.list"
+if cp /etc/apt/sources.list /etc/apt/sources.list.bak; then
+    print_status "ok" "Backup created"
 else
-    print_status "failed" "Failed to install software-properties-common"
+    print_status "failed" "Backup failed"
     exit 1
 fi
 
-# Add contrib non-free
-print_status "start" "Adding repository components contrib non-free non-free-firmware"
-if yes | apt-add-repository --component contrib non-free non-free-firmware; then
+# Add contrib, non-free, non-free-firmware
+print_status "start" "Adding repository components contrib non-free"
+if sed -i -E 's/^(deb(-src)?\s+\S+\s+\S+).*/\1 main contrib non-free non-free-firmware/' /etc/apt/sources.list; then
     print_status "ok" "Repository components added"
 else
     print_status "failed" "Failed to add repository components"
     exit 1
 fi
 
+# Update package lists
+print_status "start" "Updating package lists"
+if apt update; then
+    print_status "ok" "Package lists updated"
+else
+    print_status "failed" "Failed to update package lists"
+    exit 1
+fi
+
 # General CLI tools
 print_status "start" "Installing general CLI tools"
-if apt install -y wget gpg curl rar unrar zip unzip jq tree net-tools bc htop btop duf tldr tmux exa bat ncdu locate lf neofetch bash-completion zsh; then
+if apt install -y wget gpg curl rar unrar zip unzip jq tree net-tools bc htop btop duf tealdeer tmux eza bat ncdu locate lf bash-completion zsh; then
     print_status "ok" "General CLI tools installed"
 else
     print_status "failed" "Failed to install general CLI tools"
