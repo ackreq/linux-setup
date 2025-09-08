@@ -9,20 +9,20 @@ These scripts automates the setup process for a Debian system, installing variou
 
 > [!Important]
 > If you assigned a password to the root account during the Debian installation, your regular user account may not have root privileges. To grant root privileges to your regular user, add the user to the `sudo` group as follows:
-
-1. Install the `sudo` package:
-
-   ```shell
-   apt install sudo
-   ```
-
-2. Add your user to the `sudo` group:
-
-   ```shell
-   usermod -aG sudo <username>
-   ```
-
-   Replace `<username>` with your actual username.
+>
+> 1. Install the `sudo` package:
+>
+>    ```shell
+>    apt install sudo
+>    ```
+>
+> 2. Add your user to the `sudo` group:
+>
+>    ```shell
+>    usermod -aG sudo <username>
+>    ```
+>
+>    Replace `<username>` with your actual username.
 
 3. Log out and log back in for the changes to take effect.
 
