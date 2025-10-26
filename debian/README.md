@@ -1,24 +1,31 @@
 # Debian Setup Scripts
 
-These scripts automates the setup process for a Debian system, installing various software packages and setting up development tools.
+These scripts automate the setup of a **Debian system**, including:
+
+- Installing essential software packages
+- Setting up development tools
+- Configuring the system for general-purpose use
+
+They are designed to quickly spin up a Debian system for development, server tasks, or other general workflows.
 
 ## Prerequisites
 
-- A fresh installation of Debian.
-- Access to a user account with root privileges.
+- A fresh installation of Debian
+- A user account with root privileges
 
 > [!Important]
-> If you assigned a password to the root account during the Debian installation, your regular user account may not have root privileges. To grant root privileges to your regular user, add the user to the `sudo` group as follows:
+> If you assigned a password to the root account during Debian installation, your regular user might not have root privileges. To grant `sudo` access to your regular user, perform the following steps **as the root user**:
 >
-> 1. Install the `sudo` package:
+> 1. Install `sudo` (if not already installed):
 >
->    ```shell
+>    ```sh
+>    apt update
 >    apt install sudo
 >    ```
 >
 > 2. Add your user to the `sudo` group:
 >
->    ```shell
+>    ```sh
 >    usermod -aG sudo <username>
 >    ```
 >
@@ -28,39 +35,38 @@ These scripts automates the setup process for a Debian system, installing variou
 
 ## Usage
 
-To set up your Debian system, follow these steps:
+Follow these steps to spin up your Debian system:
 
 1. **Install Required Packages**
 
-   Run the following command to install necessary tools:
+   Install essential tools needed for the setup scripts:
 
-   ```shell
-   apt install -y wget zip git
+   ```sh
+   sudo apt update && sudo apt install -y wget zip git
    ```
 
 2. **Clone the Repository**
 
-   Use `git` to clone this repository:
+   Clone this repository to your local system:
 
    ```shell
-   git clone https://github.com/slash071/linux-setup.git
+   git clone https://github.com/ackreq/linux-setup.git
    ```
 
 3. **Navigate to the Repository Directory**
 
-   Change to the directory corresponding to your Debian version:
+   Move into the folder corresponding to your Debian version:
 
    ```shell
-   cd linux-setup/debian/debian<version>
+   cd linux-setup/debian/debian<VERSION>
    ```
 
 4. **Run the Setup Script**
+
    Execute the desired setup script:
 
    ```shell
-   sudo bash <script>.sh
+   sudo bash <SCRIPT>.sh
    ```
 
-   Follow the prompts during execution and provide any required inputs.
-
-Inspired from [b-sullender](https://github.com/b-sullender/debian-setup)
+   Follow the prompts and provide any required input during execution.
