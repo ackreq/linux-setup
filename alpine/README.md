@@ -29,6 +29,12 @@ They can be used to quickly configure a system for **Digital Forensics & Inciden
 >    apk add sudo
 >    usermod -aG wheel <USERNAME>
 >    ```
+>    
+>     Run `visudo` to safely edit the sudoers file and ensure the following line is uncommented:
+>
+>     ```
+>     %wheel ALL=(ALL:ALL) ALL
+>     ```
 >
 > 3. Reboot and log back in for the changes to take effect.
 

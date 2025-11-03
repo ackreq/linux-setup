@@ -19,8 +19,7 @@ They are designed to quickly spin up a Debian system for development, server tas
 > 1. Install `sudo` (if not already installed):
 >
 >    ```sh
->    apt update
->    apt install sudo
+>    apt update && apt install sudo
 >    ```
 >
 > 2. Add your user to the `sudo` group:
